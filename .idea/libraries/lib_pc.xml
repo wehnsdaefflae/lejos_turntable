@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="lib_pc">
+    <CLASSES>
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/charting.jar!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/jtools.jar!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/pccomm.jar!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/pctools.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/charting-src.zip!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/jtools-src.zip!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/pccomm-src.zip!/" />
+      <root url="jar://C:/Program Files (x86)/leJOS NXJ/lib/pc/pctools-src.zip!/" />
+    </SOURCES>
+  </library>
+</component>

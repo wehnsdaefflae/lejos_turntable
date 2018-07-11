@@ -16,6 +16,7 @@ public class HelloWorld {
         boolean stripe = false;
         float averageLight = 0f;
         float degreeTurned = 0;
+        float stepSize = 360f / (2f * 37f);
         float lightChangePercent;
 
         while (!touch.isPressed() && degreeTurned < 360) {
@@ -26,10 +27,10 @@ public class HelloWorld {
             lightChangePercent = lightValue / averageLight - 1f;
             if (stripe && lightChangePercent >= .1f) {
                 stripe = false;
-                degreeTurned += 4.5f;
+                degreeTurned += stepSize;
             } else if (!stripe && lightChangePercent < .1f) {
                 stripe = true;
-                degreeTurned += 4.5f;
+                degreeTurned += stepSize;
             }
             LCD.clearDisplay();
             LCD.drawInt((int) (100f * lightChangePercent), 0, 0);

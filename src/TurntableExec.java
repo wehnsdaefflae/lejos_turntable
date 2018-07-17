@@ -2,7 +2,6 @@ import lejos.nxt.*;
 import lejos.util.Delay;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
 
 
 class Turntable {
@@ -11,7 +10,6 @@ class Turntable {
     private int smoothing;
     private float stepSize;
 
-    private Boolean stripe;
     private float averageLight = -1f;
     private float tableToMotor = -1f;
 
@@ -20,7 +18,7 @@ class Turntable {
     private LightSensor light = new LightSensor(SensorPort.S1);
     private TouchSensor touch = new TouchSensor(SensorPort.S2);
 
-    public Turntable(int speed, int noStripes, float tolerance, int smoothing) {
+    Turntable(int speed, int noStripes, float tolerance, int smoothing) {
         this.speed = speed;
         this.tolerance = tolerance;
         this.smoothing = smoothing;
@@ -48,7 +46,7 @@ class Turntable {
         Sound.buzz();
     }
 
-    public void start(int stepDegree, int noSteps) {
+    void start(int stepDegree, int noSteps) {
         LCD.clearDisplay();
         LCD.drawString("No. stripes: " + Integer.toString((int) (180 / this.stepSize)), 0, 0);
         LCD.drawString("Str. angle: " + Float.toString(this.stepSize), 0, 1);
@@ -59,7 +57,7 @@ class Turntable {
         for (int i = 0; i < noSteps; i++) {
             this.light.setFloodlight(true);
             Delay.msDelay(100);
-            this.turn(stepDegree);
+            this.turn(stepDegree, i);
             this.light.setFloodlight(false);
             if (this.cancel) break;
             Delay.msDelay(100);
@@ -76,30 +74,21 @@ class Turntable {
         return lightValue / this.averageLight - 1f;
     }
 
-    public void turn(int degree) {
-        int fastDegrees = (int) (floor(((float) degree / this.stepSize)) * this.stepSize);
-        int slowDegrees = degree - fastDegrees;
 
-        this.moveFast(fastDegrees);
-        if (this.cancel) return;
-        // Motor.A.flt(true);
-        Motor.A.stop();
-
-        this.moveSlow(slowDegrees);
-        if (this.cancel) return;
-        Motor.A.stop();
+    private void turn(int degree) {
+        this.turn(degree, 0);
     }
 
-    private void moveFast(int degree) {
+    private void turn(int degree, int noTurn) {
+        int lastCount = 0;
         float degreeTurned = 0f;
-        int lastTachoCount, thisTachoCount = 0;
-
-        int noStripes = 0;
 
         Motor.A.resetTachoCount();
         Motor.A.setSpeed(this.speed);
 
-        while (degreeTurned < degree) {
+        Boolean stripe = null;
+
+        for (int thisCount = Motor.A.getTachoCount(); degreeTurned < degree || lastCount < 1; thisCount = Motor.A.getTachoCount()) {
             if (this.touch.isPressed()) {
                 this.cancel = true;
                 break;
@@ -109,66 +98,35 @@ class Turntable {
 
             float lightChangePercent = this.getLightPercentChange();
             if (this.tolerance < abs(lightChangePercent)) {
-                if (this.stripe == null) {
-                    this.stripe = lightChangePercent < 0f;
-                }
-                if ((this.stripe && 0f < lightChangePercent) || (!this.stripe && lightChangePercent < 0f)){
-                    if (!this.stripe) noStripes++;
-                    this.stripe = !this.stripe;
-                    degreeTurned += this.stepSize;
+                if (stripe == null) {
+                    stripe = lightChangePercent < 0f;
+                    lastCount = thisCount;
 
-                    lastTachoCount = thisTachoCount;
-                    thisTachoCount = Motor.A.getTachoCount();
-                    float thisRatio = (thisTachoCount - lastTachoCount) / this.stepSize;
+                } else if ((stripe && 0f < lightChangePercent) || (!stripe && lightChangePercent < 0f)){
+                    stripe = !stripe;
+
+                    float thisRatio = (thisCount - lastCount) / this.stepSize;
                     this.tableToMotor = Turntable.SMOOTH(this.tableToMotor, thisRatio, this.smoothing);
+                    lastCount = thisCount;
                 }
             }
+
+            degreeTurned = thisCount / this.tableToMotor;
+
+            if (degree - degreeTurned < 5) {
+                Motor.A.setSpeed(this.speed / 2);
+            }
+
             LCD.clearDisplay();
             LCD.drawString("Light: " + Float.toString(100f * lightChangePercent), 0, 0);
-            LCD.drawString("Turned: " + Integer.toString((int) degreeTurned) + "/" + Integer.toString(degree), 0, 1);
+            LCD.drawString("Deg.: " + Integer.toString((int) degreeTurned) + "/" + Integer.toString(degree), 0, 1);
+            LCD.drawString("Turn: " + Integer.toString(noTurn), 0, 2);
             LCD.drawString("Transl.: " + Float.toString(this.tableToMotor), 0, 3);
             LCD.drawString("Step s.: " + Float.toString(this.stepSize), 0, 4);
-            LCD.drawString("Stripes: " + Integer.toString(noStripes), 0, 6);
             Delay.msDelay(100);
         }
-    }
 
-    private void moveSlow(int degree) {
-        this.moveSlow(degree, this.tableToMotor);
-    }
-
-    public void moveSlow(int degree, float tableToMotorRatio) {
-        float degreeTurned = 0f;
-        int lastTachoCount, thisTachoCount = 0;
-
-        Motor.A.resetTachoCount();
-        Motor.A.setSpeed(this.speed / 2);
-
-        Motor.A.rotate((int) (degree * tableToMotorRatio), true);
-        Delay.msDelay(100);
-        while (Motor.A.isMoving()) {
-            if (this.touch.isPressed()) {
-                this.cancel = true;
-                break;
-            }
-            float lightChangePercent = this.getLightPercentChange();
-            if (this.tolerance < abs(lightChangePercent)) {
-                if (this.stripe == null) {
-                    this.stripe = lightChangePercent < 0f;
-                }
-                if ((this.stripe && 0f < lightChangePercent) || (!this.stripe && lightChangePercent < 0f)){
-                    this.stripe = !this.stripe;
-                }
-            }
-
-            lastTachoCount = thisTachoCount;
-            thisTachoCount = Motor.A.getTachoCount();
-            degreeTurned += (thisTachoCount - lastTachoCount) / tableToMotorRatio;
-            LCD.clearDisplay();
-            LCD.drawString("Turned: " + Integer.toString((int) degreeTurned) + "/" + Integer.toString(degree), 0, 1);
-            LCD.drawString("Transl.: " + Float.toString(tableToMotorRatio), 0, 3);
-            Delay.msDelay(100);
-        }
+        Motor.A.stop();
     }
 
 }
@@ -177,6 +135,6 @@ public class TurntableExec {
 
     public static void main (String[] args) {
         Turntable turntable = new Turntable(300, 37, .05f, 5);
-        turntable.start(36, 10);
+        turntable.start(45, 8);
     }
 }

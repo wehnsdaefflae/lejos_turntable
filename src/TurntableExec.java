@@ -42,7 +42,7 @@ class Turntable {
 
     public void shoot(){
         int lastTachoCount = 0;
-        Motor.B.setSpeed(50);
+        Motor.B.setSpeed(200);
 
         Motor.B.rotate(100, false);
         for (int thisCount =  Motor.B.getTachoCount(); 0 < thisCount - lastTachoCount; Motor.B.rotate(100, true)) {
@@ -51,7 +51,7 @@ class Turntable {
                 break;
             }
 
-            Delay.msDelay(100);
+            Delay.msDelay(50);
             lastTachoCount = thisCount;
         }
         Delay.msDelay(500);

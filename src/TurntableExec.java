@@ -40,20 +40,24 @@ class Turntable {
         }
     }
 
-    public void shoot(){
-        int lastTachoCount = 0;
+    private void shoot(){
         Motor.B.setSpeed(200);
 
-        Motor.B.rotate(100, false);
-        for (int thisCount =  Motor.B.getTachoCount(); 0 < thisCount - lastTachoCount; Motor.B.rotate(100, true)) {
+        int lastTachoCount = -1, thisTachoCount = 0;
+
+        while (0 < thisTachoCount - lastTachoCount) {
             if (this.touch.isPressed()) {
                 this.cancel = true;
                 break;
             }
 
-            Delay.msDelay(50);
-            lastTachoCount = thisCount;
+            lastTachoCount = thisTachoCount;
+            Motor.B.rotate(100, true);
+            Delay.msDelay(100);
+            thisTachoCount =  Motor.B.getTachoCount();
         }
+        Motor.B.flt(true);
+
         Delay.msDelay(500);
         Sound.beepSequenceUp();
         Sound.buzz();
@@ -148,7 +152,6 @@ public class TurntableExec {
 
     public static void main (String[] args) {
         Turntable turntable = new Turntable(300, 37, .05f, 5);
-        // turntable.start(45, 8);
-        turntable.shoot();
+        turntable.start(45, 8);
     }
 }

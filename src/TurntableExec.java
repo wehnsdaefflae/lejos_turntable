@@ -63,23 +63,27 @@ class Turntable {
         Sound.buzz();
     }
 
-    void start(int stepDegree, int noSteps) {
+    void start(int stepDegree, int noAngles) {
         LCD.clearDisplay();
         LCD.drawString("No. stripes: " + Integer.toString((int) (180 / this.stepSize)), 0, 0);
         LCD.drawString("Str. angle: " + Float.toString(this.stepSize), 0, 1);
-        LCD.drawString("Target: " + Integer.toString(stepDegree * noSteps), 0, 2);
+        LCD.drawString("Target: " + Integer.toString(stepDegree * noAngles), 0, 2);
         LCD.drawString("Press touch...", 0, 6);
         this.waitTillTouch();
 
-        for (int i = 0; i < noSteps; i++) {
+        //     LCD.clearDisplay();
+
+
+        for (int i = 0; i < noAngles; i++) {
+            this.shoot();
             this.light.setFloodlight(true);
             Delay.msDelay(100);
             this.turn(stepDegree, i);
             this.light.setFloodlight(false);
             if (this.cancel) break;
             Delay.msDelay(100);
-            this.shoot();
         }
+        this.shoot();
 
         // LCD info
 
